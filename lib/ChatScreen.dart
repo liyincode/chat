@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -30,11 +32,38 @@ class _ChatScreenState extends State<ChatScreen> {
   final _isUser = true;
   final _controller = TextEditingController();
 
-  void _addMessage(String text, {bool isUser = true}) {
+  Future<void> _sendMessage(String message) async {
+    final response = await http.post(
+      Uri.parse('https://api.openai.com/v1/chat/completions'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ',
+      },
+      body: json.encode({
+        'messages': [
+          {"role": "system", "content": "You are a helpful assistant."},
+        ],
+        'model': 'gpt-3.5-turbo'
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final jsonResponse = json.decode(response.body);
+      // setState(() {
+      //   _messages.insert(0, jsonResponse);
+      // });
+    } else {
+      throw Exception('Failed to load response');
+    }
+  }
+
+  Future<void> _addMessage(String text, {bool isUser = true}) async {
     final message = ChatMessage(sender: _isUser ? 'User' : 'Bot', text: text);
     setState(() {
       _messages.add(message);
     });
+
+    await _sendMessage(text);
   }
 
   @override

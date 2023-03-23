@@ -10,60 +10,59 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final List<ChatMessage> _messages = [
-    ChatMessage(sender: 'Bot', text: 'Hello, how can I help you?'),
-    ChatMessage(
-        sender: 'User', text: 'Can you recommend a good restaurant nearby?'),
-    ChatMessage(sender: 'Bot', text: 'Sure, what type of food do you prefer?'),
-    ChatMessage(sender: 'User', text: 'I like Italian food.'),
-    ChatMessage(
-        sender: 'Bot',
-        text:
-            'There is a great Italian restaurant called "La Piazza" nearby. Would you like me to make a reservation?'),
-    ChatMessage(sender: 'User', text: 'Yes, please.'),
-    ChatMessage(
-        sender: 'Bot', text: 'What time and date would you like to book?'),
-    ChatMessage(sender: 'User', text: 'How about tomorrow at 7pm?'),
-    ChatMessage(
-        sender: 'Bot',
-        text:
-            'Great, I have made a reservation for you at La Piazza tomorrow at 7pm. Enjoy your meal!'),
-  ];
+  final List<ChatMessage> _messages = [];
   final _isUser = true;
   final _controller = TextEditingController();
 
-  Future<void> _sendMessage(String message) async {
-    final response = await http.post(
-      Uri.parse('https://api.openai.com/v1/chat/completions'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ',
-      },
-      body: json.encode({
-        'messages': [
-          {"role": "system", "content": "You are a helpful assistant."},
-        ],
-        'model': 'gpt-3.5-turbo'
-      }),
-    );
+  Future<void> _reply() async {
+    try {
+      final response = await http.post(
+        Uri.parse('https://api.openai.com/v1/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ',
+        },
+        body: json.encode({
+          'messages': _messages,
+          'model': 'gpt-3.5-turbo',
+        }),
+      );
 
-    if (response.statusCode == 200) {
-      final jsonResponse = json.decode(response.body);
-      // setState(() {
-      //   _messages.insert(0, jsonResponse);
-      // });
-    } else {
-      throw Exception('Failed to load response');
+      if (response.statusCode == 200) {
+        final jsonResponse = json.decode(response.body);
+        final message = jsonResponse['choices'].last['message'];
+        final chatMessage = ChatMessage.fromJson(message);
+        setState(() {
+          _messages.add(chatMessage);
+        });
+      } else {
+        throw Exception('Failed to load response');
+      }
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Error'),
+          content: Text(e.toString()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
     }
   }
 
-  Future<void> _addMessage(String text, {bool isUser = true}) async {
-    final message = ChatMessage(sender: _isUser ? 'User' : 'Bot', text: text);
+  Future<void> _send(String text, {bool isUser = true}) async {
+    final message = ChatMessage(role: 'user', content: text);
+
     setState(() {
       _messages.add(message);
     });
 
-    await _sendMessage(text);
+    await _reply();
   }
 
   @override
@@ -80,7 +79,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
         ChatInput(
-          onSendPressed: _addMessage,
+          onSendPressed: _send,
           controller: _controller,
         ),
       ],
@@ -100,7 +99,7 @@ class ChatMessageListItem extends StatelessWidget {
     return ListTile(
       title: Text(
         textAlign: isMe ? TextAlign.right : TextAlign.left,
-        message.text,
+        message.content,
         style: TextStyle(
           color: isMe ? Colors.blue : Colors.grey[600],
         ),
@@ -142,7 +141,7 @@ class _ChatInputState extends State<ChatInput> {
           Expanded(
             child: TextField(
               controller: widget.controller,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Type a message...',
               ),
             ),
@@ -164,10 +163,24 @@ class _ChatInputState extends State<ChatInput> {
 }
 
 class ChatMessage {
-  final String sender;
-  final String text;
+  final String role;
+  final String content;
 
-  ChatMessage({required this.sender, required this.text});
+  ChatMessage({required this.role, required this.content});
 
-  bool get isMe => sender == 'User';
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      role: json['role'],
+      content: utf8.decode(json['content'].runes.toList()),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'role': role,
+      'content': content,
+    };
+  }
+
+  bool get isMe => role == 'user';
 }

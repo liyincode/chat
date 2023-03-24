@@ -6,12 +6,11 @@ class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  ChatScreenState createState() => ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class ChatScreenState extends State<ChatScreen> {
   final List<ChatMessage> _messages = [];
-  final _isUser = true;
   final _controller = TextEditingController();
 
   Future<void> _reply() async {
@@ -20,7 +19,7 @@ class _ChatScreenState extends State<ChatScreen> {
         Uri.parse('https://api.openai.com/v1/chat/completions'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ',
+          'Authorization': 'Bearer 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',
         },
         body: json.encode({
           'messages': _messages,
@@ -42,12 +41,12 @@ class _ChatScreenState extends State<ChatScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text('Error'),
+          title: const Text('Error'),
           content: Text(e.toString()),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         ),
@@ -90,7 +89,7 @@ class _ChatScreenState extends State<ChatScreen> {
 class ChatMessageListItem extends StatelessWidget {
   final ChatMessage message;
 
-  ChatMessageListItem({required this.message});
+  const ChatMessageListItem({super.key, required this.message});
 
   @override
   Widget build(BuildContext context) {
@@ -125,17 +124,17 @@ class ChatInput extends StatefulWidget {
 
   final TextEditingController controller;
 
-  ChatInput({required this.onSendPressed, required this.controller});
+  const ChatInput({super.key, required this.onSendPressed, required this.controller});
 
   @override
-  _ChatInputState createState() => _ChatInputState();
+  ChatInputState createState() => ChatInputState();
 }
 
-class _ChatInputState extends State<ChatInput> {
+class ChatInputState extends State<ChatInput> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(8.0),
       child: Row(
         children: <Widget>[
           Expanded(
@@ -147,7 +146,7 @@ class _ChatInputState extends State<ChatInput> {
             ),
           ),
           IconButton(
-            icon: Icon(Icons.send),
+            icon: const Icon(Icons.send),
             onPressed: () {
               final text = widget.controller.text;
               if (text.isNotEmpty) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'ChatScreen.dart';
+import 'chat_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -30,20 +30,20 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat'),
+        title: const Text('Chat'),
       ),
       body: Row(
         children: [
           NavigationDrawer(
             children: [
               ...[1, 2, 3].map((e) => NavigationDrawerDestination(
-                    icon: Icon(Icons.question_answer_outlined),
+                    icon: const Icon(Icons.question_answer_outlined),
                     label: Text(e.toString()),
-                    selectedIcon: Icon(Icons.question_answer),
+                    selectedIcon: const Icon(Icons.question_answer),
                   )),
             ],
           ),
-          Expanded(
+          const Expanded(
             child: ChatScreen(),
           ),
         ],

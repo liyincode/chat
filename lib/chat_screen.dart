@@ -1,67 +1,74 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+
+
+import 'client.dart';
+import 'home.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key});
+  final Chat chat;
+
+  const ChatScreen({super.key, required this.chat});
 
   @override
   ChatScreenState createState() => ChatScreenState();
 }
 
 class ChatScreenState extends State<ChatScreen> {
-  final List<ChatMessage> _messages = [];
+  List<ChatMessage> _messages = [];
   final _controller = TextEditingController();
+  late final Client client;
 
-  Future<void> _reply() async {
-    try {
-      final response = await http.post(
-        Uri.parse('https://api.openai.com/v1/chat/completions'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer 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',
-        },
-        body: json.encode({
-          'messages': _messages,
-          'model': 'gpt-3.5-turbo',
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-        final message = jsonResponse['choices'].last['message'];
-        final chatMessage = ChatMessage.fromJson(message);
-        setState(() {
-          _messages.add(chatMessage);
-        });
-      } else {
-        throw Exception('Failed to load response');
-      }
-    } catch (e) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Error'),
-          content: Text(e.toString()),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  Future<void> _send(String text, {bool isUser = true}) async {
+  void _send(String text) async {
     final message = ChatMessage(role: 'user', content: text);
 
     setState(() {
       _messages.add(message);
     });
 
-    await _reply();
+    await _replay();
+  }
+
+  Future<void> _replay() async {
+     try {
+      final replayMessage = await client.reply('', _messages);
+      if (replayMessage != null) {
+        setState(() {
+          _messages.add(replayMessage);
+        });
+      } else {
+        _showErrorDialog('Failed to get response from OpenAI API.');
+      }
+    } catch (e) {
+      _showErrorDialog('Error: $e');
+    }
+  }
+
+  void _showErrorDialog(String errorMessage) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(errorMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    client = Client();
+
+    if(widget.chat.messages.isNotEmpty) {
+      _messages = widget.chat.messages;
+      _replay();
+    }
   }
 
   @override
@@ -120,7 +127,7 @@ class ChatMessageListItem extends StatelessWidget {
 }
 
 class ChatInput extends StatefulWidget {
-  final void Function(String, {bool isUser}) onSendPressed;
+  final void Function(String) onSendPressed;
 
   final TextEditingController controller;
 
@@ -150,7 +157,7 @@ class ChatInputState extends State<ChatInput> {
             onPressed: () {
               final text = widget.controller.text;
               if (text.isNotEmpty) {
-                widget.onSendPressed(text, isUser: true);
+                widget.onSendPressed(text);
                 widget.controller.clear();
               }
             },

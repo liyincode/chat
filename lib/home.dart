@@ -25,18 +25,35 @@ class _HomeState extends State<Home> {
     });
   }
 
+  void _onNewChat() {
+    setState(() {
+      _chatList.add(Chat(
+        title: '新的聊天',
+        messages: [ChatMessage(role: 'system', content: '开始新的聊天')],
+      ));
+      _selectedChatIndex = _chatList.length - 1;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chat'),
-      ),
       body: Row(
         children: [
           buildChatList(),
           buildChatScreen(),
         ],
       ),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(top: 70),
+        child: FloatingActionButton.extended(
+          extendedPadding: const EdgeInsets.symmetric(horizontal: 86),
+          onPressed: _onNewChat,
+          label: const Text('New Chat'),
+          icon: const Icon(Icons.add),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.startTop,
     );
   }
 
@@ -45,12 +62,29 @@ class _HomeState extends State<Home> {
       onDestinationSelected: _onDestinationSelected,
       selectedIndex: _selectedChatIndex,
       children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(28, 16, 16, 10),
+          child: Text(
+            'Chat',
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 30,
+            ),
+          ),
+        ),
+        const SizedBox(height: 110),
         for (final chatTitle in _chatList)
           NavigationDrawerDestination(
             icon: const Icon(Icons.question_answer_outlined),
             label: Text(chatTitle.title),
             selectedIcon: const Icon(Icons.question_answer),
           ),
+        const SizedBox(height: 20),
+        Divider(
+          color: Colors.grey[300],
+          thickness: 1,
+          height: 1,
+        ),
       ],
     );
   }

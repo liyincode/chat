@@ -30,7 +30,7 @@ class ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _replay() async {
-     try {
+    try {
       final replayMessage = await client.reply('', _messages);
       if (replayMessage != null) {
         setState(() {
@@ -47,16 +47,17 @@ class ChatScreenState extends State<ChatScreen> {
   void _showErrorDialog(String errorMessage) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Error'),
-        content: Text(errorMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+      builder: (context) =>
+          AlertDialog(
+            title: const Text('Error'),
+            content: Text(errorMessage),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -65,9 +66,9 @@ class ChatScreenState extends State<ChatScreen> {
     super.initState();
     client = Client();
 
-    if(widget.chat.messages.isNotEmpty) {
+    if (widget.chat.messages.isNotEmpty) {
       _messages = widget.chat.messages;
-      _replay();
+      // _replay();
     }
   }
 
@@ -113,14 +114,14 @@ class ChatMessageListItem extends StatelessWidget {
       leading: isMe
           ? null
           : const Icon(
-              Icons.android,
-              color: Colors.green,
-            ),
+        Icons.android,
+        color: Colors.green,
+      ),
       trailing: isMe
           ? const Icon(
-              Icons.account_circle,
-              color: Colors.purple,
-            )
+        Icons.account_circle,
+        color: Colors.purple,
+      )
           : null,
     );
   }
@@ -131,7 +132,8 @@ class ChatInput extends StatefulWidget {
 
   final TextEditingController controller;
 
-  const ChatInput({super.key, required this.onSendPressed, required this.controller});
+  const ChatInput(
+      {super.key, required this.onSendPressed, required this.controller});
 
   @override
   ChatInputState createState() => ChatInputState();
